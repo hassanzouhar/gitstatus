@@ -13,8 +13,8 @@
 	  HasUncommittedChanges() (bool, error)
 	  HasUnpushedCommits() (bool, error)
 	  IsProtectedBranch(branch string) bool
-	  Push() error
-	  Pull() error
+	  Push(quiet bool) error
+	  Pull(quiet bool) error
 	  CommitAll(message string) error
 	  CreateAndCheckoutBranch(branchName string) error
 	}
@@ -78,35 +78,42 @@
 	    return head.Hash() != remoteRef.Hash(), nil
 	  }
 
-			    func execGitCommand(args ...string) error {
-			      cmd := exec.Command("git", args...)
-			      output, err := cmd.CombinedOutput()
-			      if err != nil {
-			        return fmt.Errorf("git command failed: %s: %w", string(output), err)
-			      }
-			      return nil
-			    }
-
-			    func (r *GitRepo) Push() error {
-			      branch, err := r.CurrentBranch()
-			      if err != nil {
-			        return fmt.Errorf("failed to get current branch: %w", err)
-			      }
-			      return execGitCommand("push", "origin", branch)
+							func execGitCommand(quiet bool, args ...string) error {
+							  cmd := exec.Command("git", args...)
+							  if quiet {
+							    cmd.Stdout = nil
+							    cmd.Stderr = nil
+							  }
+							  output, err := cmd.CombinedOutput()
+							  if err != nil {
+							    if quiet {
+							      return fmt.Errorf("git command failed: %w", err)
+							    }
+							    return fmt.Errorf("git command failed: %s: %w", string(output), err)
+							  }
+							  return nil
 							}
 
-			    func (r *GitRepo) Pull() error {
-			      branch, err := r.CurrentBranch()
-			      if err != nil {
-			        return fmt.Errorf("failed to get current branch: %w", err)
-			      }
-			      
-			      err = execGitCommand("pull", "origin", branch)
-			      if err != nil {
-			        return fmt.Errorf("failed to pull: %w", err)
-			      }
-			      return nil
-			    }
+							func (r *GitRepo) Push(quiet bool) error {
+							  branch, err := r.CurrentBranch()
+							  if err != nil {
+							    return fmt.Errorf("failed to get current branch: %w", err)
+							  }
+							  return execGitCommand(quiet, "push", "origin", branch)
+							}
+
+							func (r *GitRepo) Pull(quiet bool) error {
+							  branch, err := r.CurrentBranch()
+							  if err != nil {
+							    return fmt.Errorf("failed to get current branch: %w", err)
+							  }
+							  
+							  err = execGitCommand(quiet, "pull", "origin", branch)
+							  if err != nil {
+							    return fmt.Errorf("failed to pull: %w", err)
+							  }
+							  return nil
+							}
 
 	  func (r *GitRepo) IsProtectedBranch(branch string) bool {
 	    for _, protected := range r.protectedBranches {

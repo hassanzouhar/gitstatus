@@ -19,16 +19,15 @@
 	  return &Config{
 	    QuietMode:       quiet,
 	    InteractiveMode: interactive,
-	    ProtectedBranches: []string{
-	      "main",
-	      "master",
-	      "production",
-	      "staging",
-	    },
+	    ProtectedBranches: []string{},
 	  }
 	}
 
 	func (c *Config) SetProtectedBranches(branches []string) {
 	  c.ProtectedBranches = branches
+	}
+
+	func (c *Config) UnprotectAllBranches() {
+	  c.ProtectedBranches = []string{}
 	}
 

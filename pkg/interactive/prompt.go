@@ -89,9 +89,9 @@
 	        return nil
 	    }
 
-	    if err := h.repo.Push(); err != nil {
-	        return fmt.Errorf("failed to push: %w", err)
-	    }
+					if err := h.repo.Push(h.quiet); err != nil {
+					    return fmt.Errorf("failed to push: %w", err)
+					}
 
 	    color.Green("✓ Commits pushed successfully")
 	    return nil
@@ -113,9 +113,9 @@
 	        return nil
 	    }
 
-	    if err := h.repo.Pull(); err != nil {
-	        return fmt.Errorf("failed to pull: %w", err)
-	    }
+					if err := h.repo.Pull(h.quiet); err != nil {
+					    return fmt.Errorf("failed to pull: %w", err)
+					}
 
 	    color.Green("✓ Changes pulled successfully")
 	    return nil
