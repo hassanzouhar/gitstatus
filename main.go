@@ -8,7 +8,6 @@
 	  "github.com/spf13/cobra"
 	  "github.com/hassanzouhar/gitstatus/internal/config"
 	  "github.com/hassanzouhar/gitstatus/pkg/checker"
-	  "github.com/hassanzouhar/gitstatus/pkg/git"
 	  "github.com/hassanzouhar/gitstatus/pkg/interactive"
 	)
 
@@ -73,11 +72,11 @@
 	  }
 
 			if interactiveMode && status.HasIssues() {
-			  repo, err := checker.Repository()
+					    repo := status.Repository()
 			  if err != nil {
 			    return fmt.Errorf("failed to get repository: %w", err)
 			  }
-			  handler := interactive.NewHandler(repo)
+					    handler := interactive.NewHandler(repo, quietMode)
 	    if err := handler.ProcessStatus(status); err != nil {
 	      return fmt.Errorf("failed to process interactive actions: %w", err)
 	    }
