@@ -43,10 +43,9 @@
 	    code, err := execute()
 	    if err != nil {
 	        if statusErr, isStatusErr := err.(*GitStatusError); isStatusErr {
-	            color.Red("Error: %v", statusErr)
+	            color.Red("Error: %s", statusErr.msg)
 	        } else {
-	            fmt.Println(err)
-	            rootCmd.Help()
+	            fmt.Fprintln(os.Stderr, err)
 	        }
 	    }
 	    os.Exit(code)
