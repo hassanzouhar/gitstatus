@@ -96,30 +96,37 @@
 	        repo := status.Repository()
 	        handler := interactive.NewHandler(repo, quietMode)
 	        
-	        if err := handler.ProcessStatus(status); err != nil {
-	            return fmt.Errorf("failed to process interactive actions: %w", err)
-	        }
-	        
-	        // Recheck status after interactive operations
-	        status, err = checker.Check(cfg)
-	        if err != nil {
-	            return fmt.Errorf("failed to recheck status: %w", err)
-	        }
-	        
-	        if !quietMode {
-	            if status.HasIssues() {
-	                color.Yellow("\n! Some issues remain unresolved")
-	            } else {
-	                color.Green("\n✓ All issues were resolved successfully")
+	        // Process all status issues interactively
+	        for status.HasIssues() {
+	            if err := handler.ProcessStatus(status); err != nil {
+	                return fmt.Errorf("failed to process interactive actions: %w", err)
+	            }
+	            
+	            // Recheck status after each interactive operation
+	            status, err = checker.Check(cfg)
+	            if err != nil {
+	                return fmt.Errorf("failed to recheck status: %w", err)
+	            }
+	            
+	            if !quietMode {
+	                if status.HasIssues() {
+	                    color.Yellow("\n! Some issues remain unresolved")
+	                    status.Print() // Print updated status for next action
+	                } else {
+	                    color.Green("\n✓ All issues were resolved successfully")
+	                }
+	            }
+	            
+	            if !status.HasIssues() {
+	                return nil
 	            }
 	        }
-	        
-	        if !status.HasIssues() {
-	            return nil
-	        }
+	        // Don't return error in interactive mode as we want to allow 
+	        // the user to resolve remaining issues
+	        return nil
 	    }
 
-	    // Return status error only if not in interactive mode or if interactive mode didn't resolve all issues
+	    // Return status error only if not in interactive mode
 	    if err := status.Error(); err != nil {
 	        if status.HasUncommitted {
 	            return &GitStatusError{code: ExitUncommitted, msg: "repository has uncommitted changes"}
