@@ -1,6 +1,6 @@
 # Git Status Check
 
-A powerful bash script that enhances Git workflow by providing comprehensive status checking and automated actions. This tool helps developers maintain clean Git repositories by detecting common issues and offering interactive solutions.
+A powerful Go CLI tool that enhances Git workflow by providing comprehensive status checking and automated actions. This tool helps developers maintain clean Git repositories by detecting common issues and offering interactive solutions.
 
 ## Features
 
@@ -21,47 +21,64 @@ A powerful bash script that enhances Git workflow by providing comprehensive sta
 - Clear action recommendations
 - Progress indicators for operations
 
+## Dependencies
+
+- Go 1.17 or higher
+- Git (installed and available in PATH)
+
 ## Installation
 
-1. Clone this repository:
+You can install `gitstatus` using Go's package manager:
+
+```bash
+go install github.com/your-username/git-status-check@v0.1.0
+```
+
+Or build from source:
+
 ```bash
 git clone https://github.com/your-username/git-status-check.git
-```
-
-2. Make the script executable:
-```bash
-chmod +x git_status_check.sh
-```
-
-3. (Optional) Add to your PATH for system-wide access:
-```bash
-ln -s $(pwd)/git_status_check.sh /usr/local/bin/git-status-check
+cd git-status-check
+go build -o gitstatus
 ```
 
 ## Usage
 
 ### Basic Usage
 ```bash
-./git_status_check.sh
+gitstatus check
 ```
 
-### Available Options
+### Available Commands
+```bash
+gitstatus [command]
 
-- `-h`: Display help information
-- `-q`: Quiet mode (only output if there are issues)
-- `-v`: Verbose mode (show additional information)
-- `-i`: Interactive mode (guides you through resolving issues)
+Available Commands:
+check       Run a comprehensive Git status check
+interactive Start interactive mode for resolving issues
+help        Help about any command
+```
+
+### Flags
+- `--quiet, -q`: Quiet mode (only output if there are issues)
+- `--verbose, -v`: Verbose mode (show additional information)
+- `--help, -h`: Help for gitstatus
 
 ### Examples
 
 1. Check status quietly:
 ```bash
-./git_status_check.sh -q
+gitstatus check --quiet
 ```
 
 2. Interactive mode with verbose output:
 ```bash
-./git_status_check.sh -i -v
+gitstatus interactive --verbose
+```
+
+3. Get help for a specific command:
+```bash
+gitstatus help check
 ```
 
 ## Exit Codes
@@ -106,7 +123,19 @@ Would you like to commit all changes? (y/n):
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Here's how you can help:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Write and test your Go code
+4. Ensure your code follows Go best practices and conventions
+5. Update tests and documentation
+6. Submit a Pull Request
+
+Make sure to run tests before submitting:
+```bash
+go test ./...
+```
 
 ## License
 
