@@ -83,11 +83,17 @@
 	        return fmt.Errorf("failed to check status: %w", err)
 	    }
 
+	    hadIssues := status.HasIssues()
+	    
 	    if !quietMode {
 	        status.Print()
+	        if !hadIssues {
+	            color.Green("\n✓ Repository is clean")
+	            return nil
+	        }
 	    }
 
-	    if interactiveMode && status.HasIssues() {
+	    if interactiveMode && hadIssues {
 	        repo := status.Repository()
 	        handler := interactive.NewHandler(repo, quietMode)
 	        
@@ -102,10 +108,16 @@
 	        }
 	        
 	        if !quietMode {
-	            color.Green("✓ All issues resolved")
+	            if status.HasIssues() {
+	                color.Yellow("\n! Some issues remain unresolved")
+	            } else {
+	                color.Green("\n✓ All issues were resolved successfully")
+	            }
 	        }
 	        
-	        return nil
+	        if !status.HasIssues() {
+	            return nil
+	        }
 	    }
 
 	    // Return status error only if not in interactive mode or if interactive mode didn't resolve all issues
