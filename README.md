@@ -1,143 +1,92 @@
-# Git Status Check
+# Gitstatus
 
-A powerful Go CLI tool that enhances Git workflow by providing comprehensive status checking and automated actions. This tool helps developers maintain clean Git repositories by detecting common issues and offering interactive solutions.
+A command-line tool that helps maintain repository hygiene by checking Git repository status and providing interactive fixes for common issues.
 
 ## Features
 
-- 🔍 **Comprehensive Status Checks**
+- 🔍 Comprehensive repository status checks:
 - Uncommitted changes detection
-- Unpushed commits tracking
-- Branch divergence detection
-- Protected branch warnings
-- Branch synchronization status
-
-- 🤖 **Interactive Mode**
-- Guided resolution of Git status issues
-- Automated commit and push operations
-- Interactive prompts for common Git actions
-
-- 🎨 **User-Friendly Output**
-- Color-coded status messages
-- Clear action recommendations
-- Progress indicators for operations
-
-## Dependencies
-
-- Go 1.17 or higher
-- Git (installed and available in PATH)
+- Unpushed commits detection
+- Branch protection checks
+- Update requirements check
+- 🤖 Interactive mode with guided fixes
+- 🚦 Clear status indicators and colored output
+- 🔧 Automatic issue resolution (with confirmation)
+- 🤫 Quiet mode for CI/CD pipelines
 
 ## Installation
 
-You can install `gitstatus` using Go's package manager:
+### Prerequisites
+- Go 1.18 or later
+- Git
 
+### Install from source
 ```bash
-go install github.com/your-username/git-status-check@v0.1.0
+go install github.com/hassanzouhar/gitstatus@latest
 ```
 
-Or build from source:
-
+Make sure `$HOME/go/bin` is in your PATH:
 ```bash
-git clone https://github.com/your-username/git-status-check.git
-cd git-status-check
-go build -o gitstatus
+export PATH=$PATH:$HOME/go/bin
 ```
 
 ## Usage
 
 ### Basic Usage
 ```bash
-gitstatus check
+gitstatus
 ```
 
-### Available Commands
+### Interactive Mode
 ```bash
-gitstatus [command]
-
-Available Commands:
-check       Run a comprehensive Git status check
-interactive Start interactive mode for resolving issues
-help        Help about any command
+gitstatus -i
 ```
 
 ### Flags
-- `--quiet, -q`: Quiet mode (only output if there are issues)
-- `--verbose, -v`: Verbose mode (show additional information)
-- `--help, -h`: Help for gitstatus
+- `-i, --interactive`: Enable interactive mode with guided fixes
+- `-q, --quiet`: Suppress output except for errors
+- `-v, --version`: Display version information
+- `-h, --help`: Show help information
 
-### Examples
+## Examples
 
-1. Check status quietly:
+### Non-Interactive Mode
+
 ```bash
-gitstatus check --quiet
+$ gitstatus
+Current branch: main
+⚠ You have uncommitted changes
 ```
 
-2. Interactive mode with verbose output:
+### Interactive Mode
+
 ```bash
-gitstatus interactive --verbose
-```
+$ gitstatus -i
+Current branch: main
+⚠ You have uncommitted changes
 
-3. Get help for a specific command:
-```bash
-gitstatus help check
-```
-
-## Exit Codes
-
-The script uses different exit codes to indicate various states:
-
-- `0`: Everything is clean (no issues)
-- `1`: Script error or invalid usage
-- `2`: Protected branch warning
-- `3`: Uncommitted changes or unpushed commits
-- `4`: Branch needs pulling (behind remote)
-- `5`: Branches have diverged
-- `6`: Other Git-related issues
-
-## Color-Coded Output
-
-The script uses color coding for better visibility:
-
-- 🟢 Green: Success messages and completed actions
-- 🔴 Red: Errors and critical issues
-- 🟡 Yellow: Warnings and status notifications
-- 🔵 Blue: Information and progress messages
-
-## Interactive Mode Flow
-
-When running in interactive mode (-i), the script:
-
-1. Checks current branch status
-2. Detects any issues (uncommitted changes, unpushed commits, etc.)
-3. Offers appropriate actions for each issue
-4. Guides you through resolving each issue step by step
-5. Confirms successful completion of actions
-
-Example interaction:
-```
 === Recommended Actions ===
 1. Commit your changes:
 git add .
 git commit -m "your commit message"
-Would you like to commit all changes? (y/n):
+Would you like to commit all changes? (y/n): y
+Enter commit message: update readme
+✓ Changes committed successfully
+
+⚠ You have unpushed commits
+2. Push your commits:
+git push origin main
+Would you like to push your commits? (y/n): y
+✓ Commits pushed successfully
+
+✓ All issues were resolved successfully
 ```
 
-## Contributing
+In interactive mode, the tool will:
+1. Check for uncommitted changes and offer to commit them
+2. Check for unpushed commits and offer to push them
+3. Verify branch protection rules
+4. Check if the branch needs to be updated
 
-Contributions are welcome! Here's how you can help:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Write and test your Go code
-4. Ensure your code follows Go best practices and conventions
-5. Update tests and documentation
-6. Submit a Pull Request
-
-Make sure to run tests before submitting:
-```bash
-go test ./...
-```
-
-## License
-
-This project is open source and available under the MIT License.
+Each step is handled sequentially with clear prompts and confirmations.
 
