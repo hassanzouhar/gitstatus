@@ -29,15 +29,7 @@
 
 	// ProcessStatus handles all git status issues interactively
 	func (h *Handler) ProcessStatus(status *checker.Status) error {
-					      branch, err := h.repo.CurrentBranch()
-					      if err != nil {
-					          return fmt.Errorf("failed to get current branch: %w", err)
-					      }
-					      if status.IsProtected {
-					          fmt.Printf("⚠ Warning: You are on protected branch '%s'\n", branch)
-					      }
-
-					      if status.HasUncommitted {
+	    if status.HasUncommitted {
 					          if err := h.handleUncommittedChanges(); err != nil {
 					              return fmt.Errorf("failed to handle uncommitted changes: %w", err)
 					          }
