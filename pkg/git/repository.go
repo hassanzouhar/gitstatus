@@ -1,12 +1,12 @@
 	package git
 
-					    import (
-					      "fmt"
-					      "github.com/go-git/go-git/v5"
-					      "github.com/go-git/go-git/v5/plumbing"
-					      "github.com/go-git/go-git/v5/plumbing/object"
-					      "github.com/go-git/go-git/v5/config"
-					    )
+													import (
+													    "fmt"
+													    "os/exec"
+													    "github.com/go-git/go-git/v5"
+													    "github.com/go-git/go-git/v5/plumbing"
+													    "github.com/go-git/go-git/v5/plumbing/object"
+													)
 
 	type Repository interface {
 	  CurrentBranch() (string, error)
@@ -78,35 +78,35 @@
 	    return head.Hash() != remoteRef.Hash(), nil
 	  }
 
-	  func (r *GitRepo) Push() error {
-	    return r.repo.Push(&git.PushOptions{
-	      RefSpecs: []config.RefSpec{
-	        config.RefSpec("refs/heads/*:refs/heads/*"),
-	      },
-	      Progress: nil,
-	      Force:    false,
-	    })
-	  }
+			    func execGitCommand(args ...string) error {
+			      cmd := exec.Command("git", args...)
+			      output, err := cmd.CombinedOutput()
+			      if err != nil {
+			        return fmt.Errorf("git command failed: %s: %w", string(output), err)
+			      }
+			      return nil
+			    }
 
-	  func (r *GitRepo) Pull() error {
-	    w, err := r.repo.Worktree()
-	    if err != nil {
-	      return fmt.Errorf("failed to get worktree: %w", err)
-	    }
+			    func (r *GitRepo) Push() error {
+			      branch, err := r.CurrentBranch()
+			      if err != nil {
+			        return fmt.Errorf("failed to get current branch: %w", err)
+			      }
+			      return execGitCommand("push", "origin", branch)
+							}
 
-	    err = w.Pull(&git.PullOptions{
-	      RemoteName: "origin",
-	      Progress:   nil,
-	    })
-
-	    if err == git.NoErrAlreadyUpToDate {
-	      return nil
-	    }
-	    if err != nil {
-	      return fmt.Errorf("failed to pull: %w", err)
-	    }
-	    return nil
-	  }
+			    func (r *GitRepo) Pull() error {
+			      branch, err := r.CurrentBranch()
+			      if err != nil {
+			        return fmt.Errorf("failed to get current branch: %w", err)
+			      }
+			      
+			      err = execGitCommand("pull", "origin", branch)
+			      if err != nil {
+			        return fmt.Errorf("failed to pull: %w", err)
+			      }
+			      return nil
+			    }
 
 	  func (r *GitRepo) IsProtectedBranch(branch string) bool {
 	    for _, protected := range r.protectedBranches {
@@ -115,7 +115,7 @@
 	      }
 	    }
 	    return false
-			    }
+							}
 
 			    func (r *GitRepo) CommitAll(message string) error {
 			      w, err := r.repo.Worktree()
@@ -124,9 +124,9 @@
 			      }
 
 			      // Stage all changes
-									          if _, err := w.Add("."); err != nil {
-									            return fmt.Errorf("failed to stage changes: %w", err)
-									          }
+																			if _, err := w.Add("."); err != nil {
+																			    return fmt.Errorf("failed to stage changes: %w", err)
+																			}
 
 			      // Create commit
 			      commit, err := w.Commit(message, &git.CommitOptions{
