@@ -22,7 +22,7 @@ A command-line tool that helps maintain repository hygiene by checking Git repos
 
 ### Install from source
 ```bash
-go install github.com/hassanzouhar/gitstatus@latest
+go install github.com/hassanzouhar/gitstatus@main
 ```
 
 Make sure `$HOME/go/bin` is in your PATH:
