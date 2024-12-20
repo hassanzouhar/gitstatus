@@ -246,9 +246,11 @@ if [ "$has_unpushed_commits" = true ]; then
     echo "   git push origin $current_branch"
     
     if confirm_action "Would you like to push your commits?"; then
-        execute_git_command "git push origin $current_branch" \
+        if execute_git_command "git push origin $current_branch" \
             "Commits pushed successfully" \
-            "Failed to push commits"
+            "Failed to push commits"; then
+            has_unpushed_commits=false
+        fi
     fi
 fi
 
@@ -257,9 +259,11 @@ if [ "$needs_pull" = true ]; then
     echo "   git pull origin $current_branch"
     
     if confirm_action "Would you like to pull latest changes?"; then
-        execute_git_command "git pull origin $current_branch" \
+        if execute_git_command "git pull origin $current_branch" \
             "Changes pulled successfully" \
-            "Failed to pull changes"
+            "Failed to pull changes"; then
+            needs_pull=false
+        fi
     fi
 fi
 
@@ -275,9 +279,11 @@ if [ "$has_diverged" = true ]; then
             "Failed to pull remote changes"; then
             echo -e "${YELLOW}Check for conflicts and resolve if necessary${NC}"
             if confirm_action "Ready to push changes?"; then
-                execute_git_command "git push origin $current_branch" \
+                if execute_git_command "git push origin $current_branch" \
                     "Changes pushed successfully" \
-                    "Failed to push changes"
+                    "Failed to push changes"; then
+                    has_diverged=false
+                fi
             fi
         fi
     fi
