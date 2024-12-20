@@ -13,6 +13,7 @@ NC='\033[0m' # No Color
 
 # Default settings
 QUIET_MODE=false
+INTERACTIVE_MODE=false
 PROTECTED_BRANCHES=("main" "master" "production" "staging")
 EXIT_CODE=0
 
@@ -22,12 +23,13 @@ show_help() {
 Git Status Check v${VERSION}
 Last updated: ${LAST_UPDATED}
 
-Usage: $(basename $0) [-h] [-q] [-v]
+Usage: $(basename $0) [-h] [-q] [-v] [-i]
 
 Options:
 -h    Show this help message
 -q    Quiet mode (only return exit code, useful for CI/CD)
 -v    Show version information
+-i    Interactive mode (execute recommended actions with confirmation)
 
 Exit codes:
 0    Repository is clean and up-to-date
@@ -49,7 +51,45 @@ show_version() {
 }
 
 # Parse command line options
-while getopts "hqv" opt; do
+# Function to execute git commands safely
+execute_git_command() {
+    local cmd="$1"
+    local success_msg="$2"
+    local error_msg="$3"
+    
+    if [ "$QUIET_MODE" = false ]; then
+        echo -e "${BLUE}Executing: ${NC}$cmd"
+    fi
+    
+    if eval "$cmd"; then
+        [ "$QUIET_MODE" = false ] && echo -e "${GREEN}✓ $success_msg${NC}"
+        return 0
+    else
+        [ "$QUIET_MODE" = false ] && echo -e "${RED}✗ $error_msg${NC}"
+        return 1
+    fi
+}
+
+# Function to prompt user for confirmation
+confirm_action() {
+    local prompt="$1"
+    if [ "$INTERACTIVE_MODE" = false ] || [ "$QUIET_MODE" = true ]; then
+        return 1
+    fi
+    
+    echo -e "${YELLOW}$prompt ${NC}(y/n): "
+    read -r response
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+while getopts "hqvi" opt; do
     case ${opt} in
         h )
             show_help
@@ -59,6 +99,9 @@ while getopts "hqv" opt; do
             ;;
         v )
             show_version
+            ;;
+        i )
+            INTERACTIVE_MODE=true
             ;;
         \? )
             show_help
@@ -169,16 +212,35 @@ if [ "$has_uncommitted_changes" = true ]; then
     echo -e "${YELLOW}1. Commit your changes:${NC}"
     echo "   git add ."
     echo "   git commit -m \"your commit message\""
+    
+    if confirm_action "Would you like to commit all changes?"; then
+        read -p "Enter commit message: " commit_msg
+        execute_git_command "git add . && git commit -m \"$commit_msg\"" \
+            "Changes committed successfully" \
+            "Failed to commit changes"
+    fi
 fi
 
 if [ "$has_unpushed_commits" = true ]; then
     echo -e "${YELLOW}2. Push your commits:${NC}"
     echo "   git push origin $current_branch"
+    
+    if confirm_action "Would you like to push your commits?"; then
+        execute_git_command "git push origin $current_branch" \
+            "Commits pushed successfully" \
+            "Failed to push commits"
+    fi
 fi
 
 if [ "$needs_pull" = true ]; then
     echo -e "${YELLOW}3. Pull latest changes:${NC}"
     echo "   git pull origin $current_branch"
+    
+    if confirm_action "Would you like to pull latest changes?"; then
+        execute_git_command "git pull origin $current_branch" \
+            "Changes pulled successfully" \
+            "Failed to pull changes"
+    fi
 fi
 
 if [ "$has_diverged" = true ]; then
@@ -186,6 +248,19 @@ if [ "$has_diverged" = true ]; then
     echo "   git pull origin $current_branch  # Pull and merge remote changes"
     echo "   # Resolve any conflicts if they occur"
     echo "   git push origin $current_branch  # Push your changes"
+    
+    if confirm_action "Would you like to sync diverged branches?"; then
+        if execute_git_command "git pull origin $current_branch" \
+            "Remote changes pulled successfully" \
+            "Failed to pull remote changes"; then
+            echo -e "${YELLOW}Check for conflicts and resolve if necessary${NC}"
+            if confirm_action "Ready to push changes?"; then
+                execute_git_command "git push origin $current_branch" \
+                    "Changes pushed successfully" \
+                    "Failed to push changes"
+            fi
+        fi
+    fi
 fi
 
 if [[ "$has_uncommitted_changes" = false && "$has_unpushed_commits" = false && "$needs_pull" = false && "$has_diverged" = false ]]; then
