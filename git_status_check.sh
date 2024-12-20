@@ -237,7 +237,7 @@ if [ "$has_uncommitted_changes" = true ]; then
         read -p "Enter commit message: " commit_msg
         execute_git_command "git add . && git commit -m \"$commit_msg\"" \
             "Changes committed successfully" \
-            "Failed to commit changes"
+            "Failed to commit changes" && has_uncommitted_changes=false
     fi
 fi
 
