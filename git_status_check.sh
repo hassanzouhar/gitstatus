@@ -77,19 +77,24 @@ confirm_action() {
         return 1
     fi
     
-    echo -e "${YELLOW}$prompt ${NC}(y/n): "
-    read -r response
-    case "$response" in
-        [yY][eE][sS]|[yY]) 
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
+    while true; do
+        echo -en "${YELLOW}$prompt ${NC}(y/n): "
+        read -r response
+        case "$response" in
+            [yY][eE][sS]|[yY]) 
+                return 0
+                ;;
+            [nN][oO]|[nN])
+                return 1
+                ;;
+            *)
+                echo -e "${RED}Please answer yes/y or no/n${NC}"
+                ;;
+        esac
+    done
 }
 
-while getopts "hqvi" opt; do
+while getopts ":hqvi" opt; do
     case ${opt} in
         h )
             show_help
@@ -104,10 +109,18 @@ while getopts "hqvi" opt; do
             INTERACTIVE_MODE=true
             ;;
         \? )
+            echo -e "${RED}Error: Invalid option: -$OPTARG${NC}" >&2
             show_help
+            exit 1
+            ;;
+        : )
+            echo -e "${RED}Error: Option -$OPTARG requires an argument${NC}" >&2
+            show_help
+            exit 1
             ;;
     esac
 done
+shift $((OPTIND -1))
 
 # Function to check if Git LFS is installed and being used
 check_git_lfs() {
@@ -189,21 +202,28 @@ fi
 # Check for unpulled commits
 git fetch -q
 UPSTREAM=${1:-'@{u}'}
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse "$UPSTREAM")
-BASE=$(git merge-base @ "$UPSTREAM")
-
-if [ $LOCAL = $REMOTE ]; then
-    echo -e "${GREEN}✓ Repository is up to date${NC}"
-elif [ $LOCAL = $BASE ]; then
-    echo -e "${YELLOW}⚠ Need to pull - you are behind by $(git rev-list HEAD..origin/$(git branch --show-current) --count) commit(s)${NC}"
-    needs_pull=true
-elif [ $REMOTE = $BASE ]; then
-    echo -e "${YELLOW}⚠ Need to push - you are ahead by $(git rev-list origin/$(git branch --show-current)..HEAD --count) commit(s)${NC}"
+if ! git rev-parse --verify @{u} >/dev/null 2>&1; then
+    echo -e "${YELLOW}⚠ No upstream branch set${NC}"
     has_unpushed_commits=true
 else
-    echo -e "${RED}✗ Branches have diverged${NC}"
-    has_diverged=true
+    LOCAL=$(git rev-parse @ 2>/dev/null)
+    REMOTE=$(git rev-parse @{u} 2>/dev/null)
+    BASE=$(git merge-base @ @{u} 2>/dev/null)
+
+    if [ "$LOCAL" = "$REMOTE" ]; then
+        echo -e "${GREEN}✓ Repository is up to date${NC}"
+    elif [ "$LOCAL" = "$BASE" ]; then
+        BEHIND_COUNT=$(git rev-list --count HEAD..@{u} 2>/dev/null)
+        echo -e "${YELLOW}⚠ Need to pull - you are behind by ${BEHIND_COUNT} commit(s)${NC}"
+        needs_pull=true
+    elif [ "$REMOTE" = "$BASE" ]; then
+        AHEAD_COUNT=$(git rev-list --count @{u}..HEAD 2>/dev/null)
+        echo -e "${YELLOW}⚠ Need to push - you are ahead by ${AHEAD_COUNT} commit(s)${NC}"
+        has_unpushed_commits=true
+    else
+        echo -e "${RED}✗ Branches have diverged${NC}"
+        has_diverged=true
+    fi
 fi
 
 # Print summary and recommendations
