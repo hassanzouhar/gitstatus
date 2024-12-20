@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Default settings
 QUIET_MODE=false
 INTERACTIVE_MODE=false
-PROTECTED_BRANCHES=("main" "master" "production" "staging")
+PROTECTED_BRANCHES=()
 EXIT_CODE=0
 
 # Help message
